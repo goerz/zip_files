@@ -76,9 +76,10 @@ To install the latest released version of zip-files, run this command in your te
 
     pip install zip_files
 
-This is the preferred method to install zip-files, as it will always install the most recent stable release.
-It will result in the executable commands `zip-files` and `zip-folder` being
-added to your environments ``bin`` folder.
+This is the preferred method to install zip-files, as it will always install
+the most recent stable release.  It will result in the executable commands
+``zip-files`` and ``zip-folder`` being added to your environment's ``bin``
+folder.
 
 .. _Github: https://github.com/goerz/zip_files
 

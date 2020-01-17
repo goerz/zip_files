@@ -57,7 +57,7 @@ setup(
     author_email='mail@michaelgoerz.net',
     classifiers=[
         'Environment :: Console',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: BSD License',
@@ -80,7 +80,7 @@ setup(
     long_description=readme + '\n\n' + history,
     long_description_content_type='text/x-rst',
     include_package_data=True,
-    keywords='zip_files',
+    keywords='zip',
     name='zip_files',
     packages=find_packages(where="src"),
     package_dir={"": "src"},
