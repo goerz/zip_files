@@ -3,12 +3,8 @@ environment:
   matrix:
     - PYTHON: "C:\\Python36"
       TOXENV: py36-test
-    - PYTHON: "C:\\Python37"
-      TOXENV: py37-test
     - PYTHON: "C:\\Python38"
       TOXENV: py38-test
-    - PYTHON: "C:\\Python39"
-      TOXENV: py39-test
 
 install:
   - "%PYTHON%\\python.exe -V"
