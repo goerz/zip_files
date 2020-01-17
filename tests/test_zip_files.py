@@ -35,21 +35,16 @@ def test_zip_files_simple(tmp_path):
         ROOT / 'user' / 'folder2' / 'FILE.txt',
     ]
     result = runner.invoke(
-        zip_files, ['--debug', '-o', str(outfile)] + [str(f) for f in files],
+        zip_files, ['--debug', '-o', str(outfile)] + [str(f) for f in files]
     )
     _check_exit_code(result)
+    expected_files = ['Hello World.docx', 'FILE.txt'] + [
+        str(Path("My Documents") / f.name) for f in files[0].iterdir()
+    ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
         assert zipfile.testzip() is None
-        assert set(zipfile.namelist()) == set(
-            [
-                'Hello World.docx',
-                'FILE.txt',
-                "My Documents/64px-Fishs & Schrödinger's cat.gif",
-                'My Documents/example-1.3.jar',
-                'My Documents/你好，世界.md',
-            ]
-        )
+        assert set(zipfile.namelist()) == set(expected_files)
 
 
 def test_zip_files_with_root_folder(tmp_path):
@@ -67,18 +62,13 @@ def test_zip_files_with_root_folder(tmp_path):
         + [str(f) for f in files],
     )
     _check_exit_code(result)
+    expected_files = ['xyz/Hello World.docx', 'xyz/FILE.txt'] + [
+        str(Path("xyz") / "My Documents" / f.name) for f in files[0].iterdir()
+    ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
         assert zipfile.testzip() is None
-        assert set(zipfile.namelist()) == set(
-            [
-                'xyz/Hello World.docx',
-                'xyz/FILE.txt',
-                "xyz/My Documents/64px-Fishs & Schrödinger's cat.gif",
-                'xyz/My Documents/example-1.3.jar',
-                'xyz/My Documents/你好，世界.md',
-            ]
-        )
+        assert set(zipfile.namelist()) == set(expected_files)
 
 
 def test_zip_files_to_stdout():
@@ -94,16 +84,11 @@ def test_zip_files_to_stdout():
         ['--debug', '--root-folder', 'xyz'] + [str(f) for f in files],
     )
     _check_exit_code(result)
+    expected_files = ['xyz/Hello World.docx', 'xyz/FILE.txt'] + [
+        str(Path("xyz") / "My Documents" / f.name) for f in files[0].iterdir()
+    ]
     assert len(result.stdout_bytes) > 0
     with ZipFile(io.BytesIO(result.stdout_bytes)) as zipfile:
         zipfile.debug = 3
         assert zipfile.testzip() is None
-        assert set(zipfile.namelist()) == set(
-            [
-                'xyz/Hello World.docx',
-                'xyz/FILE.txt',
-                "xyz/My Documents/64px-Fishs & Schrödinger's cat.gif",
-                'xyz/My Documents/example-1.3.jar',
-                'xyz/My Documents/你好，世界.md',
-            ]
-        )
+        assert set(zipfile.namelist()) == set(expected_files)

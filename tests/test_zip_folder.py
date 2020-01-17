@@ -73,21 +73,17 @@ def test_zip_folder_simple(tmp_path):
     outfile = tmp_path / 'simple.zip'
     folder = ROOT / 'user' / 'folder'
     result = runner.invoke(
-        zip_folder, ['--debug', '-o', str(outfile), str(folder)],
+        zip_folder, ['--debug', '-o', str(outfile), str(folder)]
     )
     _check_exit_code(result)
+    expected_files = ['folder/Hello World.docx', 'folder/hello.txt'] + [
+        str(Path("folder") / "My Documents" / f.name)
+        for f in (folder / 'My Documents').iterdir()
+    ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
         assert zipfile.testzip() is None
-        assert set(zipfile.namelist()) == set(
-            [
-                'folder/Hello World.docx',
-                'folder/hello.txt',
-                "folder/My Documents/64px-Fishs & Schrödinger's cat.gif",
-                'folder/My Documents/example-1.3.jar',
-                'folder/My Documents/你好，世界.md',
-            ]
-        )
+        assert set(zipfile.namelist()) == set(expected_files)
 
 
 def test_zip_folder_with_root_folder(tmp_path):
@@ -100,18 +96,14 @@ def test_zip_folder_with_root_folder(tmp_path):
         ['--debug', '-o', str(outfile), '--root-folder', 'xyz', str(folder)],
     )
     _check_exit_code(result)
+    expected_files = ['xyz/Hello World.docx', 'xyz/hello.txt'] + [
+        str(Path("xyz") / "My Documents" / f.name)
+        for f in (folder / 'My Documents').iterdir()
+    ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
         assert zipfile.testzip() is None
-        assert set(zipfile.namelist()) == set(
-            [
-                'xyz/Hello World.docx',
-                'xyz/hello.txt',
-                "xyz/My Documents/64px-Fishs & Schrödinger's cat.gif",
-                'xyz/My Documents/example-1.3.jar',
-                'xyz/My Documents/你好，世界.md',
-            ]
-        )
+        assert set(zipfile.namelist()) == set(expected_files)
 
 
 def test_zip_folder_compression(tmp_path):
@@ -121,14 +113,7 @@ def test_zip_folder_compression(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(
             zip_folder,
-            [
-                '--debug',
-                '-o',
-                'uncompressed.zip',
-                '-c',
-                'stored',
-                str(folder),
-            ],
+            ['--debug', '-o', 'uncompressed.zip', '-c', 'stored', str(folder)],
         )
         _check_exit_code(result)
         result = runner.invoke(
