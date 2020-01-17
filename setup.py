@@ -25,7 +25,7 @@ except OSError:
     history = ''
 
 # requirements for use
-requirements = []
+requirements = ['click']
 
 # requirements for development (testing, generating docs)
 dev_requirements = [
@@ -57,19 +57,22 @@ setup(
     author_email='mail@michaelgoerz.net',
     classifiers=[
         'Environment :: Console',
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
         'License :: OSI Approved :: BSD License',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: System :: Archiving :: Compression',
+        'Topic :: System :: Archiving :: Packaging',
+        'Topic :: Utilities',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
-        'Natural Language :: English',
+        'Environment :: Console',
     ],
-    description=(
-        "Command line utilities for creating zip files"
-    ),
+    description="Command line utilities for creating zip files",
     python_requires='>=3.6',
     install_requires=requirements,
     extras_require={'dev': dev_requirements},
