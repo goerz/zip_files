@@ -28,6 +28,42 @@ zip-files
 
 Command line utilities for creating zip files.
 
+Provides the ``zip-files`` and ``zip-folder`` command line utilities. These are
+intended as an easy platform-independent tool to create zip files with
+an arbitrary file name and an arbitrary root (the top-level folder after
+extracting a zip) from files and folders at arbitrary locations on the file
+system.
+
+Typical usage includes:
+
+*   Deploy zip archives of Sphinx-documentation while releasing Python packages:
+
+    .. code-block:: shell
+
+        zip-folder --auto-root --outfile docs/_build/artifacts/mypackage-v1.0.0.zip docs/_build/html
+
+    creates a file ``mypackage-v1.0.0.zip`` in ``docs/_build/artifacts`` that
+    unzips as a folder ``mypackage-v1.0.0`` containing the files originally in
+    ``docs/_build/html/``.
+
+*   Create zip files pulled together from different locations, for emailing:
+
+    .. code-block:: shell
+
+        zip-folder -a -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
+
+    creates a file ``report.zip`` that unzips as a folder
+    ``report`` containing the file ``report2020-01.tex`` and all the pdf files
+    originally in ``/scratch/project/plots/``.
+
+    .. code-block:: shell
+
+        zip-folder -f report2020-01 -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
+
+    does the same, but unzips as a folder ``report2020-01`` instead of ``report``.
+
+
+
 Development of zip-files happens on `Github`_.
 
 
