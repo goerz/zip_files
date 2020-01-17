@@ -6,7 +6,7 @@ from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED, ZIP_BZIP2, ZIP_LZMA
 import click
 
 
-__version__ = '0.2.0'
+__version__ = '0.2.0+dev'
 
 __all__ = []
 
