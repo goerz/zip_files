@@ -40,7 +40,7 @@ Options:
   -h, --help                      Show this message and exit.
   --version                       Show the version and exit.
   --debug                         Activate debug logging.
-  -f, --root-folder TEXT          Folder name to use as the top level folder
+  -f, --root-folder ROOT_FOLDER   Folder name to use as the top level folder
                                   inside the zip file (replacing FOLDER).
   -c, --compression [stored|deflated|bzip2|lzma]
                                   Zip compression method. The following methods
@@ -50,7 +50,10 @@ Options:
                                   (part of the zip standard since 2001); "lzma":
                                   LZMA compression method (part of the zip
                                   standard since 2006).  [default: deflated]
-  -o, --outfile TEXT              The path of the zip file to be written. By
+  -a, --auto-root                 If given in combination with --outfile, use
+                                  the stem of the OUTFILE (without path and
+                                  extension) as the value for ROOT_FOLDER
+  -o, --outfile OUTFILE           The path of the zip file to be written. By
                                   default, the file is written to stdout.
 '''.strip()
 
@@ -182,3 +185,51 @@ def test_zip_folder_compression(tmp_path):
         )
         assert result.exit_code != 0
         assert 'Invalid value for "--compression"' in result.output
+
+
+def test_zip_folder_auto_root(tmp_path):
+    """Test zip-folder with "--auto-root"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    folder = ROOT / 'user' / 'folder'
+    result = runner.invoke(
+        zip_folder,
+        ['--debug', '-o', str(outfile), '--auto-root', str(folder)],
+    )
+    _check_exit_code(result)
+    expected_files = ['archive/Hello World.docx', 'archive/hello.txt'] + [
+        "/".join(["archive", "My Documents", f.name])
+        for f in (folder / 'My Documents').iterdir()
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_invalid_auto_root():
+    """Test imcompatibility of --auto-root and other options."""
+    runner = CliRunner()
+    outfile = 'archive.zip'
+    folder = ROOT
+
+    result = runner.invoke(
+        zip_folder,
+        [
+            '--debug',
+            '-a',
+            '-o',
+            str(outfile),
+            '--root-folder',
+            'xyz',
+            str(folder),
+        ],
+    )
+    assert result.exit_code != 0
+    assert '--auto-root is incompatible with --root-folder' in result.output
+
+    result = runner.invoke(
+        zip_folder, ['--debug', '--auto-root', str(folder),],
+    )
+    assert result.exit_code != 0
+    assert '--auto-root requires --outfile' in result.output

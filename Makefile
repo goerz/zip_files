@@ -75,7 +75,7 @@ isort-check: bootstrap ## Check all src and test files for correctly sorted impo
 isort: bootstrap ## Sort imports in all src and test files
 	$(TOX) -e run-isort
 
-coverage: test37  ## generate coverage report in ./htmlcov
+coverage: test  ## generate coverage report in ./htmlcov
 	$(TOX) -e coverage
 	@echo "open htmlcov/index.html"
 

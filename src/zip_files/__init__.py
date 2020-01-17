@@ -16,8 +16,8 @@ def _zip_files(debug, root_folder, compression, outfile, files):
 
     Args:
         debug (bool): Whether to show debug logging.
-        root_folder (Path): folder name to prepend to `files` inside the zip
-            archive
+        root_folder (Path or None): folder name to prepend to `files` inside
+            the zip archive
         compression (int): Zip compression. One of :obj:`zipfile.ZIP_STORED`
             :obj:`zipfile.ZIP_DEFLATED`, :obj:`zipfile.ZIP_BZIP2`,
             :obj:`zipfile.ZIP_LZMA`
@@ -52,22 +52,59 @@ def _add_to_zip(zipfile, file, root_folder, relative_to):
         zipfile.writestr(filename, data)
     elif file.is_dir():
         directory = file
-        for file in directory.iterdir():
-            _add_to_zip(zipfile, file, root_folder, relative_to)
+        for file_in_dir in directory.iterdir():
+            _add_to_zip(zipfile, file_in_dir, root_folder, relative_to)
 
 
 def _activate_debug_logger():
+    """Global logger used when running from command line."""
     logging.basicConfig(
         format='(%(levelname)s) %(message)s', level=logging.DEBUG
     )
 
 
-_COMPRESSION = {
+class _DependsOn(click.Option):
+    """A custom click option that depends on other options."""
+
+    def __init__(self, *args, **kwargs):
+        self.depends_on = kwargs.pop('depends_on')
+        self.incompatible_with = kwargs.pop('incompatible_with', [])
+        super().__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        """Parsing callback."""
+        if self.name in opts:
+            if self.depends_on not in opts:
+                raise click.UsageError(
+                    "%s requires %s"
+                    % (
+                        self._fmt_opt(self.name),
+                        self._fmt_opt(self.depends_on),
+                    )
+                )
+            for name in self.incompatible_with:
+                if name in opts:
+                    raise click.UsageError(
+                        "%s is incompatible with %s"
+                        % (self._fmt_opt(self.name), self._fmt_opt(name))
+                    )
+        return super().handle_parse_result(ctx, opts, args)
+
+    @staticmethod
+    def _fmt_opt(name):
+        """'auto_root' -> '--auto-root'."""
+        return "--" + name.replace("_", "-")
+
+
+_COMPRESSION = {  # possible values for --compression
     'stored': ZIP_STORED,
     'deflated': ZIP_DEFLATED,
     'bzip2': ZIP_BZIP2,
     'lzma': ZIP_LZMA,
 }
+
+
+# zip-files ###################################################################
 
 
 @click.command()
@@ -77,6 +114,7 @@ _COMPRESSION = {
 @click.option(
     '--root-folder',
     '-f',
+    metavar='ROOT_FOLDER',
     help="Folder name to prepend to FILES inside the zip file.",
 )
 @click.option(
@@ -96,22 +134,40 @@ _COMPRESSION = {
     ),
 )
 @click.option(
+    '--auto-root',
+    '-a',
+    cls=_DependsOn,
+    depends_on='outfile',
+    incompatible_with=['root_folder'],
+    is_flag=True,
+    help=(
+        "If given in combination with --outfile, use the stem of the OUTFILE "
+        "(without path and extension) as the value for ROOT_FOLDER"
+    ),
+)
+@click.option(
     '--outfile',
     '-o',
+    metavar='OUTFILE',
     help=(
         "The path of the zip file to be written. By default, the file is "
         "written to stdout."
     ),
 )
 @click.argument('files', nargs=-1, type=click.Path(exists=True, readable=True))
-def zip_files(debug, root_folder, compression, outfile, files):
+def zip_files(debug, auto_root, root_folder, compression, outfile, files):
     """Create a zip file containing FILES."""
     if debug:
         _activate_debug_logger()
     files = [Path(f) for f in files]
+    if auto_root:
+        root_folder = Path(outfile).stem
     _zip_files(
         debug, root_folder, _COMPRESSION[compression.lower()], outfile, files
     )
+
+
+# #############################################################################
 
 
 def _help(name):  # pragma: no cover
@@ -127,6 +183,9 @@ def _help(name):  # pragma: no cover
     raise ValueError("Unknown option: %r" % name)
 
 
+# zip-folder ##################################################################
+
+
 @click.command()
 @click.help_option('--help', '-h')
 @click.version_option(version=__version__)
@@ -134,6 +193,7 @@ def _help(name):  # pragma: no cover
 @click.option(
     '--root-folder',
     '-f',
+    metavar='ROOT_FOLDER',
     help=(
         "Folder name to use as the top level folder inside the zip file "
         "(replacing FOLDER)."
@@ -147,19 +207,33 @@ def _help(name):  # pragma: no cover
     show_default=True,
     help=_help('compression'),
 )
-@click.option('--outfile', '-o', help=_help('outfile'))
+@click.option(
+    '--auto-root',
+    '-a',
+    cls=_DependsOn,
+    depends_on='outfile',
+    incompatible_with=['root_folder'],
+    is_flag=True,
+    help=_help('auto_root'),
+)
+@click.option('--outfile', '-o', metavar='OUTFILE', help=_help('outfile'))
 @click.argument(
     'folder',
     nargs=1,
     type=click.Path(file_okay=False, exists=True, readable=True),
 )
-def zip_folder(debug, root_folder, compression, outfile, folder):
+def zip_folder(debug, auto_root, root_folder, compression, outfile, folder):
     """Create a zip file containing the FOLDER."""
     if debug:
         _activate_debug_logger()
     files = Path(folder).iterdir()
     if root_folder is None:
         root_folder = Path(folder).name
+        if auto_root:
+            root_folder = Path(outfile).stem
     _zip_files(
         debug, root_folder, _COMPRESSION[compression.lower()], outfile, files,
     )
+
+
+# #############################################################################

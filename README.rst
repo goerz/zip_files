@@ -64,7 +64,7 @@ zip-files
       -h, --help                      Show this message and exit.
       --version                       Show the version and exit.
       --debug                         Activate debug logging.
-      -f, --root-folder TEXT          Folder name to prepend to FILES inside the
+      -f, --root-folder ROOT_FOLDER   Folder name to prepend to FILES inside the
                                       zip file.
       -c, --compression [stored|deflated|bzip2|lzma]
                                       Zip compression method. The following
@@ -75,8 +75,12 @@ zip-files
                                       since 2001); "lzma": LZMA compression method
                                       (part of the zip standard since 2006).
                                       [default: deflated]
-      -o, --outfile TEXT              The path of the zip file to be written. By
+      -a, --auto-root                 If given in combination with --outfile, use
+                                      the stem of the OUTFILE (without path and
+                                      extension) as the value for ROOT_FOLDER
+      -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.
+
 
 zip-folder
 ~~~~~~~~~~
@@ -91,7 +95,7 @@ zip-folder
       -h, --help                      Show this message and exit.
       --version                       Show the version and exit.
       --debug                         Activate debug logging.
-      -f, --root-folder TEXT          Folder name to use as the top level folder
+      -f, --root-folder ROOT_FOLDER   Folder name to use as the top level folder
                                       inside the zip file (replacing FOLDER).
       -c, --compression [stored|deflated|bzip2|lzma]
                                       Zip compression method. The following
@@ -102,5 +106,8 @@ zip-folder
                                       since 2001); "lzma": LZMA compression method
                                       (part of the zip standard since 2006).
                                       [default: deflated]
-      -o, --outfile TEXT              The path of the zip file to be written. By
+      -a, --auto-root                 If given in combination with --outfile, use
+                                      the stem of the OUTFILE (without path and
+                                      extension) as the value for ROOT_FOLDER
+      -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.

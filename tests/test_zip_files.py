@@ -92,3 +92,27 @@ def test_zip_files_to_stdout():
         zipfile.debug = 3
         assert zipfile.testzip() is None
         assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_files_auto_root(tmp_path):
+    """Test zip-files with "--auto-root"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'autoroot.zip'
+    files = [
+        ROOT / 'user' / 'folder' / 'My Documents',
+        ROOT / 'user' / 'folder' / 'Hello World.docx',
+        ROOT / 'user' / 'folder2' / 'FILE.txt',
+    ]
+    result = runner.invoke(
+        zip_files,
+        ['--debug', '-o', str(outfile), '-a'] + [str(f) for f in files],
+    )
+    _check_exit_code(result)
+    expected_files = ['autoroot/Hello World.docx', 'autoroot/FILE.txt'] + [
+        "/".join(["autoroot", "My Documents", f.name])
+        for f in files[0].iterdir()
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
