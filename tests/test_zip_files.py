@@ -39,7 +39,7 @@ def test_zip_files_simple(tmp_path):
     )
     _check_exit_code(result)
     expected_files = ['Hello World.docx', 'FILE.txt'] + [
-        str(Path("My Documents") / f.name) for f in files[0].iterdir()
+        "/".join(["My Documents", f.name]) for f in files[0].iterdir()
     ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
@@ -63,7 +63,7 @@ def test_zip_files_with_root_folder(tmp_path):
     )
     _check_exit_code(result)
     expected_files = ['xyz/Hello World.docx', 'xyz/FILE.txt'] + [
-        str(Path("xyz") / "My Documents" / f.name) for f in files[0].iterdir()
+        "/".join(["xyz", "My Documents", f.name]) for f in files[0].iterdir()
     ]
     with ZipFile(outfile) as zipfile:
         zipfile.debug = 3
@@ -85,7 +85,7 @@ def test_zip_files_to_stdout():
     )
     _check_exit_code(result)
     expected_files = ['xyz/Hello World.docx', 'xyz/FILE.txt'] + [
-        str(Path("xyz") / "My Documents" / f.name) for f in files[0].iterdir()
+        "/".join(["xyz", "My Documents", f.name]) for f in files[0].iterdir()
     ]
     assert len(result.stdout_bytes) > 0
     with ZipFile(io.BytesIO(result.stdout_bytes)) as zipfile:

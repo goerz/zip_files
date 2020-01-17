@@ -77,7 +77,7 @@ def test_zip_folder_simple(tmp_path):
     )
     _check_exit_code(result)
     expected_files = ['folder/Hello World.docx', 'folder/hello.txt'] + [
-        str(Path("folder") / "My Documents" / f.name)
+        "/".join(["folder", "My Documents", f.name])
         for f in (folder / 'My Documents').iterdir()
     ]
     with ZipFile(outfile) as zipfile:
@@ -97,7 +97,7 @@ def test_zip_folder_with_root_folder(tmp_path):
     )
     _check_exit_code(result)
     expected_files = ['xyz/Hello World.docx', 'xyz/hello.txt'] + [
-        str(Path("xyz") / "My Documents" / f.name)
+        "/".join(["xyz", "My Documents", f.name])
         for f in (folder / 'My Documents').iterdir()
     ]
     with ZipFile(outfile) as zipfile:
