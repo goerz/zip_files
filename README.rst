@@ -14,7 +14,7 @@ zip-files
    :alt: Travis Continuous Integration
    :target: https://travis-ci.org/goerz/zip_files
 
-.. image:: https://img.shields.io/badge/appveyor-no%20id-red.svg
+.. image:: https://ci.appveyor.com/api/projects/status/k2lqxw97gv2m9gpm/branch/master?svg=true
    :alt: AppVeyor Continuous Integration
    :target: https://ci.appveyor.com/project/goerz/zip-files
 
