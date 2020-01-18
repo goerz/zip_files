@@ -50,7 +50,7 @@ Typical usage includes:
 
     .. code-block:: shell
 
-        zip-folder -a -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
+        zip-files -a -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
 
     creates a file ``report.zip`` that unzips as a folder
     ``report`` containing the file ``report2020-01.tex`` and all the pdf files
@@ -58,7 +58,7 @@ Typical usage includes:
 
     .. code-block:: shell
 
-        zip-folder -f report2020-01 -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
+        zip-files -f report2020-01 -o report.zip ./report2020-01.tex /scratch/project/plots/*.pdf
 
     does the same, but unzips as a folder ``report2020-01`` instead of ``report``.
 
