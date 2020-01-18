@@ -6,7 +6,8 @@ from zipfile import ZipFile
 from click.testing import CliRunner
 from pkg_resources import parse_version
 
-from zip_files import __version__, zip_folder
+from zip_files import __version__
+from zip_files.zip_folder import zip_folder
 
 
 ROOT = Path(__file__).parent / 'root'

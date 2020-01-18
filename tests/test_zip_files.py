@@ -8,7 +8,8 @@ from click.testing import CliRunner
 from pkg_resources import parse_version
 
 from test_zip_folder import _check_exit_code
-from zip_files import __version__, zip_files
+from zip_files import __version__
+from zip_files.zip_files import zip_files
 
 
 ROOT = Path(__file__).parent / 'root'

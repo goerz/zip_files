@@ -86,8 +86,8 @@ setup(
     package_dir={"": "src"},
     entry_points='''
         [console_scripts]
-        zip-files=zip_files:zip_files
-        zip-folder=zip_files:zip_folder
+        zip-files=zip_files.zip_files:zip_files
+        zip-folder=zip_files.zip_folder:zip_folder
     ''',
     url='https://github.com/goerz/zip_files',
     version=version,
