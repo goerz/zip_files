@@ -54,6 +54,13 @@ Options:
   -a, --auto-root                 If given in combination with --outfile, use
                                   the stem of the OUTFILE (without path and
                                   extension) as the value for ROOT_FOLDER
+  -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched from
+                                  the right against all paths in the zip file,
+                                  see Python pathlib's Path.match method. This
+                                  option can be given multiple times.
+  --exclude-dotfiles / --include-dotfiles
+                                  Whether or not to include dotfiles in the zip
+                                  files. By default, dotfiles are included.
   -o, --outfile OUTFILE           The path of the zip file to be written. By
                                   default, the file is written to stdout.
 '''.strip()
@@ -230,7 +237,80 @@ def test_invalid_auto_root():
     assert '--auto-root is incompatible with --root-folder' in result.output
 
     result = runner.invoke(
-        zip_folder, ['--debug', '--auto-root', str(folder),],
+        zip_folder, ['--debug', '--auto-root', str(folder)],
     )
     assert result.exit_code != 0
     assert '--auto-root requires --outfile' in result.output
+
+
+def test_zip_folder_exclude(tmp_path):
+    """Test zip-folder with "--exclude"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'excluded.zip'
+    folder = ROOT / 'user' / 'folder'
+    result = runner.invoke(
+        zip_folder, ['--debug', '-o', str(outfile), str(folder), '-x', '*.txt']
+    )
+    _check_exit_code(result)
+    expected_files = ['folder/Hello World.docx'] + [
+        "/".join(["folder", "My Documents", f.name])
+        for f in (folder / 'My Documents').iterdir()
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_folder_include_dotfiles(tmp_path):
+    """Test zip-folder with "--include-dotfiles"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    folder = ROOT / 'folder_with_dotfiles'
+    result = runner.invoke(
+        zip_folder,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            str(folder),
+            '-x',
+            '*.txt',
+            '--include-dotfiles',
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'folder_with_dotfiles/a/.hidden',
+        'folder_with_dotfiles/b/5.md',
+        'folder_with_dotfiles/b/.hidden',
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_folder_exclude_dotfiles(tmp_path):
+    """Test zip-folder with "--exlude-dotfiles"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    folder = ROOT / 'folder_with_dotfiles'
+    result = runner.invoke(
+        zip_folder,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            str(folder),
+            '-x',
+            '*.txt',
+            '--exclude-dotfiles',
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = ['folder_with_dotfiles/b/5.md']
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)

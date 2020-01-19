@@ -117,3 +117,90 @@ def test_zip_files_auto_root(tmp_path):
         zipfile.debug = 3
         assert zipfile.testzip() is None
         assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_files_exclude(tmp_path):
+    """Test zip-files with "--exclude"."""
+    runner = CliRunner()
+    outfile = tmp_path / 'excluded.zip'
+    files = [
+        ROOT / 'user' / 'folder' / 'My Documents',
+        ROOT / 'user' / 'folder' / 'Hello World.docx',
+        ROOT / 'user' / 'folder2' / 'FILE.txt',
+    ]
+    result = runner.invoke(
+        zip_files,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '--exclude',
+            '*.txt',
+            '-x',
+            'My Documents/*.md',
+        ]
+        + [str(f) for f in files],
+    )
+    _check_exit_code(result)
+    expected_files = ['Hello World.docx'] + [
+        "/".join(["My Documents", f.name])
+        for f in files[0].iterdir()
+        if not f.name.endswith('.md')
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_files_fancy_excludes(tmp_path):
+    """Test that zip-files handles fancy exclude patterns correctly."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    files = [ROOT / 'folder_with_dotfiles']
+    result = runner.invoke(
+        zip_files,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '-x',
+            'folder_with_dotfiles/a/*.txt',
+            '-x',
+            'b/*.md',
+        ]
+        + [str(f) for f in files],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'folder_with_dotfiles/a/.hidden',
+        'folder_with_dotfiles/b/.hidden',
+        'folder_with_dotfiles/b/3.txt',
+        'folder_with_dotfiles/b/4.txt',
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
+def test_zip_files_default_include_dotfiles(tmp_path):
+    """Test that zip-files includes dotfiles by default."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    files = [ROOT / 'folder_with_dotfiles']
+    result = runner.invoke(
+        zip_files,
+        ['--debug', '-o', str(outfile), '-x', '*.txt',]
+        + [str(f) for f in files],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'folder_with_dotfiles/a/.hidden',
+        'folder_with_dotfiles/b/5.md',
+        'folder_with_dotfiles/b/.hidden',
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)

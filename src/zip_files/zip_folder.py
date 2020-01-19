@@ -45,13 +45,34 @@ _help = help_from_cmd(zip_files)
     is_flag=True,
     help=_help('auto_root'),
 )
+@click.option(
+    '--exclude',
+    '-x',
+    multiple=True,
+    metavar='GLOB_PATTERN',
+    help=_help('exclude'),
+)
+@click.option(
+    '--exclude-dotfiles/--include-dotfiles',
+    default=False,
+    help=_help('exclude_dotfiles'),
+)
 @click.option('--outfile', '-o', metavar='OUTFILE', help=_help('outfile'))
 @click.argument(
     'folder',
     nargs=1,
     type=click.Path(file_okay=False, exists=True, readable=True),
 )
-def zip_folder(debug, auto_root, root_folder, compression, outfile, folder):
+def zip_folder(
+    debug,
+    auto_root,
+    root_folder,
+    compression,
+    exclude,
+    exclude_dotfiles,
+    outfile,
+    folder,
+):
     """Create a zip file containing the FOLDER."""
     if debug:
         activate_debug_logger()
@@ -61,5 +82,11 @@ def zip_folder(debug, auto_root, root_folder, compression, outfile, folder):
         if auto_root:
             root_folder = Path(outfile).stem
     _zip_files(
-        debug, root_folder, _COMPRESSION[compression.lower()], outfile, files,
+        debug=debug,
+        root_folder=root_folder,
+        compression=_COMPRESSION[compression.lower()],
+        exclude=exclude,
+        exclude_dotfiles=exclude_dotfiles,
+        outfile=outfile,
+        files=files,
     )

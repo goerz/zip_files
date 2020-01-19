@@ -12,7 +12,9 @@ import click
 __all__ = ['zip_files']
 
 
-def zip_files(debug, root_folder, compression, outfile, files):
+def zip_files(
+    debug, root_folder, compression, exclude, exclude_dotfiles, outfile, files
+):
     """Compress list of `files`.
 
     Args:
@@ -22,6 +24,11 @@ def zip_files(debug, root_folder, compression, outfile, files):
         compression (int): Zip compression. One of :obj:`zipfile.ZIP_STORED`
             :obj:`zipfile.ZIP_DEFLATED`, :obj:`zipfile.ZIP_BZIP2`,
             :obj:`zipfile.ZIP_LZMA`
+        exclude (list[str]): A list of glob patterns to exclude. Matching is
+            done from the right on the path names inside the zip archive.
+            Patterns must be relative (not start with a slash)
+        exclude_dotfiles (bool): If given as True, exclude all files starting
+            with a dot.
         outfile (Path): The path of the zip file to be written
         files (List[Path]): The files to include in the zip archive
     """
@@ -36,22 +43,47 @@ def zip_files(debug, root_folder, compression, outfile, files):
         outfile = click.get_binary_stream('stdout')
     with ZipFile(outfile, mode='w', compression=compression) as zipfile:
         for file in files:
-            _add_to_zip(zipfile, file, root_folder, relative_to=file.parent)
+            _add_to_zip(
+                zipfile,
+                file,
+                root_folder,
+                exclude,
+                exclude_dotfiles,
+                relative_to=file.parent,
+            )
     logger.debug("Done")
 
 
-def _add_to_zip(zipfile, file, root_folder, relative_to):
+def _add_to_zip(
+    zipfile, file, root_folder, exclude, exclude_dotfiles, relative_to
+):
     """Recursively add the `file` to the (open) `zipfile`."""
     logger = logging.getLogger(__name__)
     if file.is_file():
         if root_folder is None:
-            filename = str(file.relative_to(relative_to))
+            filename = file.relative_to(relative_to)
         else:
-            filename = str(root_folder / file.relative_to(relative_to))
-        logger.debug("Adding %s to zip as %s", file, filename)
+            filename = root_folder / file.relative_to(relative_to)
         data = file.read_bytes()
-        zipfile.writestr(filename, data)
+        if exclude_dotfiles and filename.stem.startswith("."):
+            logger.debug("Skipping %s (exclude dotfiles)", filename)
+            return
+        for pattern in exclude:
+            if filename.match(pattern):
+                logger.debug(
+                    "Skipping %s (exclude pattern %s)", filename, pattern
+                )
+                return
+        logger.debug("Adding %s to zip as %s", file, filename)
+        zipfile.writestr(str(filename), data)
     elif file.is_dir():
         directory = file
         for file_in_dir in directory.iterdir():
-            _add_to_zip(zipfile, file_in_dir, root_folder, relative_to)
+            _add_to_zip(
+                zipfile,
+                file_in_dir,
+                root_folder,
+                exclude,
+                exclude_dotfiles,
+                relative_to,
+            )

@@ -92,7 +92,6 @@ zip-files
 
 .. code-block:: console
 
-
     Usage: zip-files [OPTIONS] [FILES]...
 
       Create a zip file containing FILES.
@@ -115,9 +114,17 @@ zip-files
       -a, --auto-root                 If given in combination with --outfile, use
                                       the stem of the OUTFILE (without path and
                                       extension) as the value for ROOT_FOLDER
+      -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched
+                                      from the right against all paths in the zip
+                                      file, see Python pathlib's Path.match
+                                      method. This option can be given multiple
+                                      times.
+      --exclude-dotfiles / --include-dotfiles
+                                      Whether or not to include dotfiles in the
+                                      zip files. By default, dotfiles are
+                                      included.
       -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.
-
 
 zip-folder
 ~~~~~~~~~~
@@ -146,5 +153,14 @@ zip-folder
       -a, --auto-root                 If given in combination with --outfile, use
                                       the stem of the OUTFILE (without path and
                                       extension) as the value for ROOT_FOLDER
+      -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched
+                                      from the right against all paths in the zip
+                                      file, see Python pathlib's Path.match
+                                      method. This option can be given multiple
+                                      times.
+      --exclude-dotfiles / --include-dotfiles
+                                      Whether or not to include dotfiles in the
+                                      zip files. By default, dotfiles are
+                                      included.
       -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.

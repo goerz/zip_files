@@ -59,6 +59,25 @@ _COMPRESSION = {  # possible values for --compression
     ),
 )
 @click.option(
+    '--exclude',
+    '-x',
+    multiple=True,
+    metavar='GLOB_PATTERN',
+    help=(
+        "Glob-pattern to exclude. This is matched from the right against all "
+        "paths in the zip file, see Python pathlib's Path.match method. "
+        "This option can be given multiple times."
+    ),
+)
+@click.option(
+    '--exclude-dotfiles/--include-dotfiles',
+    default=False,
+    help=(
+        "Whether or not to include dotfiles in the zip files. "
+        "By default, dotfiles are included."
+    ),
+)
+@click.option(
     '--outfile',
     '-o',
     metavar='OUTFILE',
@@ -68,7 +87,16 @@ _COMPRESSION = {  # possible values for --compression
     ),
 )
 @click.argument('files', nargs=-1, type=click.Path(exists=True, readable=True))
-def zip_files(debug, auto_root, root_folder, compression, outfile, files):
+def zip_files(
+    debug,
+    auto_root,
+    root_folder,
+    compression,
+    exclude,
+    exclude_dotfiles,
+    outfile,
+    files,
+):
     """Create a zip file containing FILES."""
     if debug:
         activate_debug_logger()
@@ -76,5 +104,11 @@ def zip_files(debug, auto_root, root_folder, compression, outfile, files):
     if auto_root:
         root_folder = Path(outfile).stem
     _zip_files(
-        debug, root_folder, _COMPRESSION[compression.lower()], outfile, files
+        debug=debug,
+        root_folder=root_folder,
+        compression=_COMPRESSION[compression.lower()],
+        exclude=exclude,
+        exclude_dotfiles=exclude_dotfiles,
+        outfile=outfile,
+        files=files,
     )
