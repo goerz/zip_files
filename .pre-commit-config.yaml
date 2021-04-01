@@ -13,7 +13,7 @@ repos:
         types: [python]
         language: script
 -   repo: https://github.com/ambv/black
-    rev: 19.10b0
+    rev: 20.8b1
     hooks:
     - id: black
       args: ['--skip-string-normalization', '--line-length', '79', '--check']

@@ -102,6 +102,7 @@ zip-files
       --debug                         Activate debug logging.
       -f, --root-folder ROOT_FOLDER   Folder name to prepend to FILES inside the
                                       zip file.
+
       -c, --compression [stored|deflated|bzip2|lzma]
                                       Zip compression method. The following
                                       methods are available: "stored": no
@@ -111,18 +112,43 @@ zip-files
                                       since 2001); "lzma": LZMA compression method
                                       (part of the zip standard since 2006).
                                       [default: deflated]
+
       -a, --auto-root                 If given in combination with --outfile, use
                                       the stem of the OUTFILE (without path and
                                       extension) as the value for ROOT_FOLDER
+
       -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched
                                       from the right against all paths in the zip
                                       file, see Python pathlib's Path.match
                                       method. This option can be given multiple
                                       times.
+
+      -X, --exclude-from FILE         File from which to read a list of glob-
+                                      patterns to exclude, cf. --exclude. Each
+                                      line in FILE is one pattern. This option can
+                                      be given multiple times.
+
       --exclude-dotfiles / --include-dotfiles
                                       Whether or not to include dotfiles in the
                                       zip files. By default, dotfiles are
                                       included.
+
+      --exclude-vcs / --include-vcs   Whether or not to include files and
+                                      directories commonly used by version control
+                                      systems. (Git, CVS, RCS, SCCS, SVN, Arch,
+                                      Bazaar, Mercurial, and Darcs), e.g.
+                                      '.git/', '.gitignore' '.gitmodules'
+                                      '.gitattributes' for Git. By default, VCS
+                                      are included.
+
+      --exclude-git-ignores / --include-git-ignores
+                                      Whether or not to look for .gitignore files
+                                      and to process them for exclude patterns.
+                                      Note that the .gitignore file itself is
+                                      still included in the zip archive unless
+                                      --exclude-vcs is given. By default,
+                                      .gitignore files are not processed.
+
       -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.
 
@@ -141,6 +167,7 @@ zip-folder
       --debug                         Activate debug logging.
       -f, --root-folder ROOT_FOLDER   Folder name to use as the top level folder
                                       inside the zip file (replacing FOLDER).
+
       -c, --compression [stored|deflated|bzip2|lzma]
                                       Zip compression method. The following
                                       methods are available: "stored": no
@@ -150,17 +177,42 @@ zip-folder
                                       since 2001); "lzma": LZMA compression method
                                       (part of the zip standard since 2006).
                                       [default: deflated]
+
       -a, --auto-root                 If given in combination with --outfile, use
                                       the stem of the OUTFILE (without path and
                                       extension) as the value for ROOT_FOLDER
+
       -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched
                                       from the right against all paths in the zip
                                       file, see Python pathlib's Path.match
                                       method. This option can be given multiple
                                       times.
+
+      -X, --exclude-from FILE         File from which to read a list of glob-
+                                      patterns to exclude, cf. --exclude. Each
+                                      line in FILE is one pattern. This option can
+                                      be given multiple times.
+
       --exclude-dotfiles / --include-dotfiles
                                       Whether or not to include dotfiles in the
                                       zip files. By default, dotfiles are
                                       included.
+
+      --exclude-vcs / --include-vcs   Whether or not to include files and
+                                      directories commonly used by version control
+                                      systems. (Git, CVS, RCS, SCCS, SVN, Arch,
+                                      Bazaar, Mercurial, and Darcs), e.g.
+                                      '.git/', '.gitignore' '.gitmodules'
+                                      '.gitattributes' for Git. By default, VCS
+                                      are included.
+
+      --exclude-git-ignores / --include-git-ignores
+                                      Whether or not to look for .gitignore files
+                                      and to process them for exclude patterns.
+                                      Note that the .gitignore file itself is
+                                      still included in the zip archive unless
+                                      --exclude-vcs is given. By default,
+                                      .gitignore files are not processed.
+
       -o, --outfile OUTFILE           The path of the zip file to be written. By
                                       default, the file is written to stdout.
