@@ -2,6 +2,11 @@
 History
 =======
 
+0.4.0 (2021-04-04)
+------------------
+
+* Added: options ``--exclude-vcs``, ``--exclude-git-ignores``, and ``--exclude-vcs``
+
 
 0.3.0 (2020-01-19)
 ------------------
