@@ -10,12 +10,6 @@ matrix:
     - name: Check code style
       python: 3.8
       env: TOXENV="run-blackcheck,run-isortcheck"
-    - name: Python 3.6
-      python: 3.6
-      env: TOXENV=py36-test
-    - name: Python 3.7
-      python: 3.7
-      env: TOXENV=py37-test
     - name: Python 3.8
       python: 3.8
       env: TOXENV=py38-test

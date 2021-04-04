@@ -70,11 +70,44 @@ _COMPRESSION = {  # possible values for --compression
     ),
 )
 @click.option(
+    '--exclude-from',
+    '-X',
+    multiple=True,
+    metavar="FILE",
+    type=click.Path(exists=True),
+    help=(
+        "File from which to read a list of glob-patterns to exclude, cf. "
+        "--exclude. Each line in FILE is one pattern. "
+        "This option can be given multiple times."
+    ),
+)
+@click.option(
     '--exclude-dotfiles/--include-dotfiles',
     default=False,
     help=(
         "Whether or not to include dotfiles in the zip files. "
         "By default, dotfiles are included."
+    ),
+)
+@click.option(
+    '--exclude-vcs/--include-vcs',
+    default=False,
+    help=(
+        "Whether or not to include files and directories commonly used by "
+        "version control systems. (Git, CVS, RCS, SCCS, SVN, Arch, "
+        "Bazaar, Mercurial, and Darcs), e.g.  '.git/', '.gitignore' "
+        "'.gitmodules' '.gitattributes' for Git. "
+        "By default, VCS are included."
+    ),
+)
+@click.option(
+    '--exclude-git-ignores/--include-git-ignores',
+    default=False,
+    help=(
+        "Whether or not to look for .gitignore files and to process them "
+        "for exclude patterns. Note that the .gitignore file itself is still "
+        "included in the zip archive unless --exclude-vcs is given. "
+        "By default, .gitignore files are not processed."
     ),
 )
 @click.option(
@@ -93,7 +126,10 @@ def zip_files(
     root_folder,
     compression,
     exclude,
+    exclude_from,
     exclude_dotfiles,
+    exclude_vcs,
+    exclude_git_ignores,
     outfile,
     files,
 ):
@@ -108,7 +144,10 @@ def zip_files(
         root_folder=root_folder,
         compression=_COMPRESSION[compression.lower()],
         exclude=exclude,
+        exclude_from=exclude_from,
         exclude_dotfiles=exclude_dotfiles,
+        exclude_vcs=exclude_vcs,
+        exclude_git_ignores=exclude_git_ignores,
         outfile=outfile,
         files=files,
     )

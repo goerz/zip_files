@@ -7,7 +7,7 @@ from zipfile import ZipFile
 from click.testing import CliRunner
 from pkg_resources import parse_version
 
-from test_zip_folder import _check_exit_code
+from test_zip_folder import _check_exit_code, _prepare_folder_with_git_excludes
 from zip_files import __version__
 from zip_files.zip_files import zip_files
 
@@ -153,8 +153,8 @@ def test_zip_files_exclude(tmp_path):
         assert set(zipfile.namelist()) == set(expected_files)
 
 
-def test_zip_files_fancy_excludes(tmp_path):
-    """Test that zip-files handles fancy exclude patterns correctly."""
+def test_zip_files_excludes(tmp_path):
+    """Test that zip-files handles exclude patterns correctly."""
     runner = CliRunner()
     outfile = tmp_path / 'archive.zip'
     files = [ROOT / 'folder_with_dotfiles']
@@ -184,6 +184,75 @@ def test_zip_files_fancy_excludes(tmp_path):
         assert set(zipfile.namelist()) == set(expected_files)
 
 
+def test_zip_files_exclude_options(tmp_path):
+    """Test --exclude-from, --exclude-vcs, --exclude-git-ignores."""
+    runner = CliRunner()
+    folder = _prepare_folder_with_git_excludes(
+        tmp_path, ROOT / 'folder_with_git_excludes'
+    )
+
+    # zip without excludes
+    outfile = tmp_path / 'archive_noexclude.zip'
+    result = runner.invoke(
+        zip_files,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '--include-vcs',
+            '--include-git-ignores',
+            str(folder / 'docs'),
+            str(folder / 'README.md'),
+            str(folder / 'HISTORY.md'),
+            str(folder / 'CONTRIBUTING.md'),
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'docs/.gitignore',
+        'docs/_build/index.html',
+        'docs/_build/build.log',
+        'docs/sources/index.rst',
+        'docs/sources/API/file2.rst',
+        'docs/sources/API/file1.rst',
+        'docs/sources/API/.gitignore',
+        'README.md',
+        'HISTORY.md',
+        'CONTRIBUTING.md',
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(expected_files) == set(zipfile.namelist())
+
+    # zip with excludes
+    (tmp_path / 'excludes.txt').write_text("HISTORY.md\nCONTRIBUTING.md\n")
+    outfile = tmp_path / 'archive_exclude.zip'
+    result = runner.invoke(
+        zip_files,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '-X',
+            str(tmp_path / 'excludes.txt'),
+            '--exclude-vcs',
+            '--exclude-git-ignores',
+            str(folder / 'docs'),
+            str(folder / 'README.md'),
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'docs/sources/index.rst',
+        'README.md',
+    ]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(expected_files)
+
+
 def test_zip_files_default_include_dotfiles(tmp_path):
     """Test that zip-files includes dotfiles by default."""
     runner = CliRunner()
@@ -191,7 +260,7 @@ def test_zip_files_default_include_dotfiles(tmp_path):
     files = [ROOT / 'folder_with_dotfiles']
     result = runner.invoke(
         zip_files,
-        ['--debug', '-o', str(outfile), '-x', '*.txt',]
+        ['--debug', '-o', str(outfile), '-x', '*.txt']
         + [str(f) for f in files],
     )
     _check_exit_code(result)

@@ -1,5 +1,7 @@
 """Tests for `zip-folder` executable."""
 
+import platform
+import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -43,6 +45,7 @@ Options:
   --debug                         Activate debug logging.
   -f, --root-folder ROOT_FOLDER   Folder name to use as the top level folder
                                   inside the zip file (replacing FOLDER).
+
   -c, --compression [stored|deflated|bzip2|lzma]
                                   Zip compression method. The following methods
                                   are available: "stored": no compression;
@@ -51,16 +54,40 @@ Options:
                                   (part of the zip standard since 2001); "lzma":
                                   LZMA compression method (part of the zip
                                   standard since 2006).  [default: deflated]
+
   -a, --auto-root                 If given in combination with --outfile, use
                                   the stem of the OUTFILE (without path and
                                   extension) as the value for ROOT_FOLDER
+
   -x, --exclude GLOB_PATTERN      Glob-pattern to exclude. This is matched from
                                   the right against all paths in the zip file,
                                   see Python pathlib's Path.match method. This
                                   option can be given multiple times.
+
+  -X, --exclude-from FILE         File from which to read a list of glob-
+                                  patterns to exclude, cf. --exclude. Each line
+                                  in FILE is one pattern. This option can be
+                                  given multiple times.
+
   --exclude-dotfiles / --include-dotfiles
                                   Whether or not to include dotfiles in the zip
                                   files. By default, dotfiles are included.
+
+  --exclude-vcs / --include-vcs   Whether or not to include files and
+                                  directories commonly used by version control
+                                  systems. (Git, CVS, RCS, SCCS, SVN, Arch,
+                                  Bazaar, Mercurial, and Darcs), e.g.  '.git/',
+                                  '.gitignore' '.gitmodules' '.gitattributes'
+                                  for Git. By default, VCS are included.
+
+  --exclude-git-ignores / --include-git-ignores
+                                  Whether or not to look for .gitignore files
+                                  and to process them for exclude patterns. Note
+                                  that the .gitignore file itself is still
+                                  included in the zip archive unless --exclude-
+                                  vcs is given. By default, .gitignore files are
+                                  not processed.
+
   -o, --outfile OUTFILE           The path of the zip file to be written. By
                                   default, the file is written to stdout.
 '''.strip()
@@ -75,6 +102,8 @@ def test_help():
     runner = CliRunner()
     result = runner.invoke(zip_folder, ['--help'])
     assert result.exit_code == 0
+    # with open("expected_zip_folder_help.debug", "w") as out_fh:
+    #     out_fh.write(result.stdout)
     assert result.stdout.strip() == _ZIP_FOLDER_EXPECTED_HELP
 
 
@@ -192,7 +221,10 @@ def test_zip_folder_compression(tmp_path):
             ],
         )
         assert result.exit_code != 0
-        assert 'Invalid value for "--compression"' in result.output
+        assert (
+            "Invalid value for " in result.output
+            and "--compression" in result.output
+        )
 
 
 def test_zip_folder_auto_root(tmp_path):
@@ -237,14 +269,15 @@ def test_invalid_auto_root():
     assert '--auto-root is incompatible with --root-folder' in result.output
 
     result = runner.invoke(
-        zip_folder, ['--debug', '--auto-root', str(folder)],
+        zip_folder,
+        ['--debug', '--auto-root', str(folder)],
     )
     assert result.exit_code != 0
     assert '--auto-root requires --outfile' in result.output
 
 
 def test_zip_folder_exclude(tmp_path):
-    """Test zip-folder with "--exclude"."""
+    """Test zip-folder with basic "--exclude"."""
     runner = CliRunner()
     outfile = tmp_path / 'excluded.zip'
     folder = ROOT / 'user' / 'folder'
@@ -260,6 +293,123 @@ def test_zip_folder_exclude(tmp_path):
         zipfile.debug = 3
         assert zipfile.testzip() is None
         assert set(zipfile.namelist()) == set(expected_files)
+
+
+def _prepare_folder_with_git_excludes(tmp_path, original):
+    """Add git-ignored files to folder."""
+    root = tmp_path / original.stem
+    shutil.copytree(original, root)
+    for file in root.glob('**/*.py'):
+        shutil.copy(file, file.with_suffix('.pyc'))
+    for file in root.glob('**/Makefile.in'):
+        shutil.copy(file, file.parent / 'Makefile')
+    for (i, file) in enumerate(['file1.rst', 'file2.rst'], start=1):
+        (root / 'docs' / 'sources' / 'API' / file).write_text("file %d" % i)
+    (root / "venv").mkdir()
+    (root / "venv" / "README.md").write_text("# This is a virtual env")
+    (root / 'docs' / '_build').mkdir()
+    (root / 'docs' / '_build' / 'build.log').write_text("# build log")
+    (root / 'docs' / '_build' / 'index.html').write_text("# HTML")
+    return root
+
+
+def test_zip_folder_exclude_options(tmp_path):
+    """Test --exclude-from, --exclude-vcs, --exclude-git-ignores."""
+    runner = CliRunner()
+    folder = _prepare_folder_with_git_excludes(
+        tmp_path, ROOT / 'folder_with_git_excludes'
+    )
+
+    # zip without excludes
+    outfile = tmp_path / 'archive_noexclude.zip'
+    result = runner.invoke(
+        zip_folder,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '--include-vcs',
+            '--include-git-ignores',
+            str(folder),
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'folder_with_git_excludes/Makefile',
+        'folder_with_git_excludes/HISTORY.md',
+        'folder_with_git_excludes/docs/.gitignore',
+        'folder_with_git_excludes/docs/sources/index.rst',
+        'folder_with_git_excludes/docs/sources/API/file2.rst',
+        'folder_with_git_excludes/docs/sources/API/file1.rst',
+        'folder_with_git_excludes/docs/sources/API/.gitignore',
+        'folder_with_git_excludes/README.md',
+        'folder_with_git_excludes/setup.pyc',
+        'folder_with_git_excludes/setup.py',
+        'folder_with_git_excludes/.gitignore',
+        'folder_with_git_excludes/CONTRIBUTING.md',
+        'folder_with_git_excludes/venv/README.md',
+        'folder_with_git_excludes/Makefile.in',
+        'folder_with_git_excludes/src/module/file2.py',
+        'folder_with_git_excludes/src/module/__init__.py',
+        'folder_with_git_excludes/src/module/file1.pyc',
+        'folder_with_git_excludes/src/module/file2.pyc',
+        'folder_with_git_excludes/src/module/sub/__init__.py',
+        'folder_with_git_excludes/src/module/sub/__init__.pyc',
+        'folder_with_git_excludes/src/module/file1.py',
+        'folder_with_git_excludes/src/module/__init__.pyc',
+    ]
+    if platform.system() == "Windows":
+        # Windows has problems with filesystem case sensitivity.
+        # https://bugs.python.org/issue26655
+        expected_files = [f.lower() for f in expected_files]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        # the zip file might include additional pyc and __pycache__files that
+        # pytest may have created in the source folder, hence we test for the
+        # subset of files we created manually.
+        files = list(zipfile.namelist())
+        if platform.system() == "Windows":
+            files = [f.lower() for f in files]
+        assert set(expected_files).issubset(files)
+
+    # zip with excludes
+    (tmp_path / 'excludes.txt').write_text("HISTORY.md\nCONTRIBUTING.md\n")
+    outfile = tmp_path / 'archive_exclude.zip'
+    result = runner.invoke(
+        zip_folder,
+        [
+            '--debug',
+            '-o',
+            str(outfile),
+            '-X',
+            str(tmp_path / 'excludes.txt'),
+            '--exclude-vcs',
+            '--exclude-git-ignores',
+            str(folder),
+        ],
+    )
+    _check_exit_code(result)
+    expected_files = [
+        'folder_with_git_excludes/docs/sources/index.rst',
+        'folder_with_git_excludes/README.md',
+        'folder_with_git_excludes/setup.py',
+        'folder_with_git_excludes/Makefile.in',
+        'folder_with_git_excludes/src/module/file2.py',
+        'folder_with_git_excludes/src/module/__init__.py',
+        'folder_with_git_excludes/src/module/sub/__init__.py',
+        'folder_with_git_excludes/src/module/file1.py',
+    ]
+    if platform.system() == "Windows":
+        # Windows has problems with filesystem case sensitivity.
+        expected_files = [f.lower() for f in expected_files]
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        files = list(zipfile.namelist())
+        if platform.system() == "Windows":
+            files = [f.lower() for f in files]
+        assert set(files) == set(expected_files)
 
 
 def test_zip_folder_include_dotfiles(tmp_path):

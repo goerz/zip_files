@@ -53,9 +53,27 @@ _help = help_from_cmd(zip_files)
     help=_help('exclude'),
 )
 @click.option(
+    '--exclude-from',
+    '-X',
+    multiple=True,
+    metavar="FILE",
+    type=click.Path(exists=True),
+    help=_help('exclude_from'),
+)
+@click.option(
     '--exclude-dotfiles/--include-dotfiles',
     default=False,
     help=_help('exclude_dotfiles'),
+)
+@click.option(
+    '--exclude-vcs/--include-vcs',
+    default=False,
+    help=_help('exclude_vcs'),
+)
+@click.option(
+    '--exclude-git-ignores/--include-git-ignores',
+    default=False,
+    help=_help('exclude_git_ignores'),
 )
 @click.option('--outfile', '-o', metavar='OUTFILE', help=_help('outfile'))
 @click.argument(
@@ -69,7 +87,10 @@ def zip_folder(
     root_folder,
     compression,
     exclude,
+    exclude_from,
     exclude_dotfiles,
+    exclude_vcs,
+    exclude_git_ignores,
     outfile,
     folder,
 ):
@@ -86,7 +107,10 @@ def zip_folder(
         root_folder=root_folder,
         compression=_COMPRESSION[compression.lower()],
         exclude=exclude,
+        exclude_from=exclude_from,
         exclude_dotfiles=exclude_dotfiles,
+        exclude_vcs=exclude_vcs,
+        exclude_git_ignores=exclude_git_ignores,
         outfile=outfile,
         files=files,
     )
