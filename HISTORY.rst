@@ -2,6 +2,13 @@
 History
 =======
 
+
+0.4.1 (2021-04-21)
+------------------
+
+* Bugfix: Permissions (especially executable permissions) were not preserved on Unix
+
+
 0.4.0 (2021-04-04)
 ------------------
 
