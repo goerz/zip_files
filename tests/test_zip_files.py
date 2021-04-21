@@ -1,9 +1,14 @@
 """Tests for `zip-files` executable."""
 
 import io
+import os
+import stat
+import sys
+import time
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
 from click.testing import CliRunner
 from pkg_resources import parse_version
 
@@ -273,3 +278,31 @@ def test_zip_files_default_include_dotfiles(tmp_path):
         zipfile.debug = 3
         assert zipfile.testzip() is None
         assert set(zipfile.namelist()) == set(expected_files)
+
+
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason="Windows does not have Unix file permissions",
+)
+def test_zip_files_preserve_executable(tmp_path):
+    """Test that an executable file permission is preserved."""
+    runner = CliRunner()
+    outfile = tmp_path / 'archive.zip'
+    executable = tmp_path / 'executable.sh'
+    with open(executable, "w") as fh:
+        fh.write("#!/usr/bin/bash\n")
+        fh.write('echo "Hello World"\n')
+    os.chmod(executable, stat.S_IXUSR | stat.S_IRUSR)
+    result = runner.invoke(
+        zip_files, ['--debug', '-o', str(outfile), str(executable)]
+    )
+    _check_exit_code(result)
+    with ZipFile(outfile) as zipfile:
+        zipfile.debug = 3
+        assert zipfile.testzip() is None
+        assert set(zipfile.namelist()) == set(["executable.sh"])
+        zip_info = zipfile.getinfo("executable.sh")
+        today = time.localtime()
+        today_ymd = (today.tm_year, today.tm_mon, today.tm_mday)
+        assert zip_info.date_time >= today_ymd
+        assert stat.filemode(zip_info.external_attr >> 16) == '-r-x------'

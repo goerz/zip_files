@@ -9,7 +9,7 @@ import random
 import re
 from pathlib import Path
 from string import ascii_letters
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import click
 
@@ -257,12 +257,19 @@ def zip_files(
                 exclude,
                 exclude_dotfiles,
                 relative_to=file.parent,
+                compression=compression,
             )
     logger.debug("Done")
 
 
 def _add_to_zip(
-    zipfile, file, root_folder, exclude, exclude_dotfiles, relative_to
+    zipfile,
+    file,
+    root_folder,
+    exclude,
+    exclude_dotfiles,
+    relative_to,
+    compression,
 ):
     """Recursively add the `file` to the (open) `zipfile`."""
     logger = logging.getLogger(__name__)
@@ -293,7 +300,9 @@ def _add_to_zip(
             else:
                 raise TypeError("Invalid type for pattern %r" % pattern)
         logger.debug("Adding %s to zip as %s", file, filename)
-        zipfile.writestr(str(filename), data)
+        zinfo = ZipInfo.from_file(file, arcname=str(filename))
+        zinfo.compress_type = compression
+        zipfile.writestr(zinfo, data)
     elif file.is_dir():
         directory = file
         for file_in_dir in directory.iterdir():
@@ -304,4 +313,5 @@ def _add_to_zip(
                 exclude,
                 exclude_dotfiles,
                 relative_to,
+                compression,
             )
