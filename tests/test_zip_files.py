@@ -3,10 +3,12 @@
 import io
 import os
 import stat
+import sys
 import time
 from pathlib import Path
 from zipfile import ZipFile
 
+import pytest
 from click.testing import CliRunner
 from pkg_resources import parse_version
 
@@ -278,6 +280,10 @@ def test_zip_files_default_include_dotfiles(tmp_path):
         assert set(zipfile.namelist()) == set(expected_files)
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason="Windows does not have Unix file permissions",
+)
 def test_zip_files_preserve_executable(tmp_path):
     """Test that an executable file permission is preserved."""
     runner = CliRunner()
